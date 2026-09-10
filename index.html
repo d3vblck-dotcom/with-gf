@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midnight Diner Co-op</title>
+    <style>
+        body { background: #111; color: white; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        h1 { margin: 5px; font-size: 18px; color: #ff7675; }
+        #game-container { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        canvas { background: #2c2c2c; border: 3px solid #ff7675; border-radius: 8px; touch-action: none; width: 100%; max-width: 400px; height: 300px; }
+        #chat-box { width: 100%; max-width: 400px; height: 120px; background: #222; border: 2px solid #555; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+        #messages { flex: 1; padding: 5px; overflow-y: auto; font-size: 11px; display: flex; flex-direction: column; gap: 3px; }
+        #chat-input-area { display: flex; border-top: 2px solid #555; }
+        #chat-input { flex: 1; background: #111; border: none; color: white; padding: 6px; font-size: 12px; font-family: monospace; }
+        #chat-input:focus { outline: none; }
+        #send-btn { background: #ff7675; border: none; color: white; padding: 0 10px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <h1>🍜 MIDNIGHT DINER 🍜</h1>
+        <canvas id="dinerCanvas" width="400" height="300"></canvas>
+        
+        <div id="chat-box">
+            <div id="messages"><div><b>System:</b> Welcome to your diner!</div></div>
+            <div id="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
+                <button id="send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('dinerCanvas');
+        const ctx = canvas.getContext('2d');
+        const messagesDiv = document.getElementById('messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        // Character states
+        let p1 = { x: 100, y: 200, name: "You (Buff)", score: 0 };
+        let p2 = { x: 300, y: 200, name: "Girlfriend (Violet)", score: 0 };
+
+        // Chat logic
+        function addMessage(sender, text) {
+            const msg = document.createElement('div');
+            msg.innerHTML = `<b>${sender}:</b> ${text}`;
+            messagesDiv.appendChild(msg);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        sendBtn.addEventListener('click', () => {
+            if (chatInput.value.trim() !== "") {
+                addMessage("You", chatInput.value);
+                chatInput.value = "";
+            }
+        });
+
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && chatInput.value.trim() !== "") {
+                addMessage("You", chatInput.value);
+                chatInput.value = "";
+            }
+        });
+
+        // Touch control logic for iPad
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            for (let i = 0; i < e.touches.length; i++) {
+                const touch = e.touches[i];
+                const touchX = touch.clientX - rect.left;
+                const touchY = touch.clientY - rect.top;
+
+                // Split screen: Left side controls you, Right side controls her
+                if (touchX < canvas.width / 2) {
+                    p1.x = touchX;
+                    p1.y = touchY;
+                    p1.score++;
+                } else {
+                    p2.x = touchX;
+                    p2.y = touchY;
+                    p2.score++;
+                }
+            }
+        }, { passive: false });
+
+        // Main Draw Loop
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Counter background
+            ctx.fillStyle = "#3b2f2f";
+            ctx.fillRect(0, 210, canvas.width, 90);
+            ctx.fillStyle = "#fdcb6e";
+            ctx.fillRect(0, 200, canvas.width, 10);
+
+            // Draw Player 1 (Muscular / Buff frame)
+            ctx.fillStyle = "#e17055"; // Skin
+            ctx.fillRect(p1.x - 20, p1.y - 25, 40, 35);
+            ctx.fillStyle = "#d63031"; // Shirt/Apron
+            ctx.fillRect(p1.x - 16, p1.y - 15, 32, 25);
+            ctx.fillStyle = "white";
+            ctx.font = "10px monospace";
+            ctx.fillText(p1.name, p1.x - 30, p1.y + 30);
+
+            // Draw Player 2 (Violet clothes)
+            ctx.fillStyle = "#e17055"; // Skin
+            ctx.fillRect(p2.x - 12, p2.y - 20, 24, 30);
+            ctx.fillStyle = "#8e44ad"; // Violet Outfit
+            ctx.fillRect(p2.x - 15, p2.y - 10, 30, 25);
+            ctx.fillStyle = "white";
+            ctx.fillText(p2.name, p2.x - 35, p2.y + 30);
+
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>
